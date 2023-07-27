@@ -1,58 +1,52 @@
-//your JS code here. If required.
-function getRandomTime() {
-  return Math.floor(Math.random() * 3000) + 1000; // Generates a random time between 1 and 3 seconds
-}
 
-function createPromise(name) {
-  const time = getRandomTime();
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ name, time });
-    }, time);
-  });
-}
+setTimeout(() => {
+  
+  const table = document.getElementById('my-table');
 
-const tableBody = document.getElementById("output");
-const promises = [
-  createPromise("Promise 1"),
-  createPromise("Promise 2"),
-  createPromise("Promise 3"),
-];
+ 
+  const promises = [
+    new Promise((resolve) => setTimeout(() => resolve('Promise 1'), Math.floor(Math.random() * 2000) + 1000)),
+    new Promise((resolve) => setTimeout(() => resolve('Promise 2'), Math.floor(Math.random() * 2000) + 1000)),
+    new Promise((resolve) => setTimeout(() => resolve('Promise 3'), Math.floor(Math.random() * 2000) + 1000))
+  ];
 
-const loadingRow = document.createElement("tr");
-const loadingCell = document.createElement("td");
-loadingCell.colSpan = 2;
-loadingCell.textContent = "Loading...";
-loadingRow.appendChild(loadingCell);
-tableBody.appendChild(loadingRow);
+  // create a row to display the total time taken
+  const totalRow = document.createElement('tr');
+  const totalTitleCell = document.createElement('td');
+  const totalTimeCell = document.createElement('td');
+  totalTitleCell.textContent = 'Total';
+  totalTimeCell.textContent = '0.000';
+  totalRow.appendChild(totalTitleCell);
+  totalRow.appendChild(totalTimeCell);
 
-Promise.all(promises)
-  .then((results) => {
-    tableBody.innerHTML = ""; // Clear the loading row
+  // add a row to the table to indicate that the data is loading
+  table.appendChild(totalRow);
+  table.insertAdjacentHTML('beforeend', '<tr id="loading"><td colspan="2">Loading...</td></tr>');
 
-    results.forEach((result) => {
-      const row = document.createElement("tr");
-      const nameCell = document.createElement("td");
-      nameCell.textContent = result.name;
-      const timeCell = document.createElement("td");
-      timeCell.textContent = (result.time / 1000).toFixed(3);
+  // wait for all Promises to resolve using Promise.all
+  const startTime = Date.now();
+  Promise.all(promises.map(p => p.then(result => ({ result, time: (Date.now() - startTime) / 1000 })))).then((results) => {
+    // remove the loading row
+    const loadingRow = document.getElementById('loading');
+    if (loadingRow) {
+      loadingRow.parentNode.removeChild(loadingRow);
+    }
 
-      row.appendChild(nameCell);
+    // populate the table with the results
+    results.forEach((result, index) => {
+      const row = document.createElement('tr');
+      const titleCell = document.createElement('td');
+      const timeCell = document.createElement('td');
+      titleCell.textContent = result.result;
+      timeCell.textContent = result.time.toFixed(3);
+      row.appendChild(titleCell);
       row.appendChild(timeCell);
-      tableBody.appendChild(row);
+      table.appendChild(row);
     });
 
-    const totalRow = document.createElement("tr");
-    const totalNameCell = document.createElement("td");
-    totalNameCell.textContent = "Total";
-    const totalTimeCell = document.createElement("td");
-    const totalTime = results.reduce((total, result) => total + result.time, 0);
-    totalTimeCell.textContent = (totalTime / 1000).toFixed(3);
-
-    totalRow.appendChild(totalNameCell);
-    totalRow.appendChild(totalTimeCell);
-    tableBody.appendChild(totalRow);
-  })
-  .catch((error) => {
-    console.error(error);
+    // populate the total time row
+    totalTimeCell.textContent = (Date.now() - startTime) / 1000;
+  }).catch((error) => {
+    console.error(error); // handle errors
   });
+}, 100);
