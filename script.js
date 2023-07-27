@@ -1,60 +1,42 @@
-let promisesArr = [
+// Function to create a promise that resolves after a random time between 1 and 3 seconds
+function createRandomDelayPromise() {
+  const randomTime = Math.floor(Math.random() * 3000) + 1000; // Random time between 1000ms and 3000ms
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(randomTime / 1000), randomTime);
+  });
+}
 
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("Promise 1")
-    }, Math.floor(Math.random * 3000) + 1000)
-  }),
+// Function to update the table with the resolved values
+function updateTableWithResults(results) {
+  const table = document.getElementById("result-table");
+  table.innerHTML = ""; // Clear the existing loading row
 
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("Promise 2")
-    }, Math.floor(Math.random * 3000) + 1000)
-  }),
+  // Populate the table with the results
+  results.forEach((result, index) => {
+    const row = table.insertRow(index);
+    const cell1 = row.insertCell(0);
+    const cell2 = row.insertCell(1);
+    cell1.innerHTML = `Promise ${index + 1}`;
+    cell2.innerHTML = `${result.toFixed(3)}`;
+  });
 
-  new Promise((resolve) => {
-    setTimeout(() => {
-      resolve("Promise 3")
-    }, Math.floor(Math.random * 3000) + 1000)
-  }),
+  // Calculate and add the total time taken
+  const totalTime = results.reduce((acc, time) => acc + time, 0);
+  const totalRow = table.insertRow();
+  const totalCell1 = totalRow.insertCell(0);
+  const totalCell2 = totalRow.insertCell(1);
+  totalCell1.innerHTML = "Total";
+  totalCell2.innerHTML = `${totalTime.toFixed(3)}`;
+}
 
-]
+// Create an array of 3 promises with random delays
+const promises = Array.from({ length: 3 }, createRandomDelayPromise);
 
-// console.log(Promise.all(promisesArr));
-
-const tableBody = document.getElementById("output");
-
-
-Promise.all(promisesArr).then((results) => {
-
-  tableBody.textContent = "";
-
-  // Creating the promise name row
-  results.forEach((result) => {
-    const row = document.createElement("tr");
-    const proCol = document.createElement("td");
-    const timeCol = document.createElement("td");
- 
-    proCol.textContent = result;
-    timeCol.textContent = (new Date().getTime() - startTime) / 1000;
-
-    row.appendChild(proCol);
-    row.appendChild(timeCol);
-    tableBody.appendChild(row);
-
+// Wait for all the promises to resolve using Promise.all
+Promise.all(promises)
+  .then((results) => {
+    updateTableWithResults(results);
   })
-
-  // Creating the time row for total time taken
-
-  const timeRow = document.createElement("tr");
-  const timeCol = document.createElement("td");
-
-  const totalDuration = (new Date().getTime()  - startTime) / 1000;
-  timeCol.setAttribute("colspan", "2");
-  timeCol.textContent = `Total: ${totalDuration.toFixed(3)}s`
-
-  timeRow.appendChild(timeCol)
-  tableBody.appendChild(timeRow);
-})
-
-const startTime =  new Date().getTime();
+  .catch((error) => {
+    console.error("Error occurred:", error);
+  });
